@@ -12,6 +12,8 @@
     <script src="https://cdn.jsdelivr.net/npm/gsap@3.12.2/dist/gsap.min.js"></script>
 </head>
 <body>
+    <div class="cursor-dot"></div>
+    <div class="cursor-outline"></div>
     <nav class="navbar">
         <div class="logo">Portfolio</div>
         <div class="nav-right">
@@ -28,15 +30,36 @@
     </nav>
 
     <section class="hero" id="home">
-        <canvas id="particleCanvas"></canvas>
+        <div class="canvas-container">
+            <canvas id="particleCanvas"></canvas>
+        </div>
         <div class="hero-content">
-            <div class="animated-title">
-                <span class="title-intro">Hello, I'm</span>
-                <h1 class="title-name" data-text="Veer Patel">Veer Patel</h1>
+            <h1 class="title-intro">HELLO WORLD</h1>
+            <div class="title-name">
+                <span class="gradient-text">I'M VEER PATEL</span>
             </div>
-            <div class="typing-text">
+            <div class="profession">
+                <span class="gradient-accent" data-text="AI ENGINEER">AI ENGINEER</span>
+            </div>
+            <p class="tagline" data-text="CRAFTING INTELLIGENCE WITH CODE">CRAFTING INTELLIGENCE WITH CODE</p>
+            <div class="role-container">
+                <span class="role-prefix">Specialized in </span>
                 <span class="typed-text"></span>
-                <span class="cursor">&nbsp;</span>
+                <span class="cursor">|</span>
+            </div>
+            <div class="hero-cta">
+                <a href="#projects" class="cta-button">
+                    <span>
+                        <i class="fas fa-code"></i>
+                        View My Work
+                    </span>
+                </a>
+                <a href="#contact" class="cta-button secondary">
+                    <span>
+                        <i class="fas fa-paper-plane"></i>
+                        Contact Me
+                    </span>
+                </a>
             </div>
         </div>
     </section>
@@ -68,6 +91,7 @@
                     <p>Proficient in Python, R, and SQL for data science applications.</p>
                 </div>
             </div>
+
             <div class="skills-container">
                 <h3>Technical Skills</h3>
                 <div class="skills-wrapper">
@@ -202,26 +226,49 @@
 
     <!-- Contact Section -->
     <section id="contact" class="contact">
-        <h2>Contact Me</h2>
-        <div class="contact-content">
-            <form id="contact-form">
-                <input type="text" placeholder="Your Name" required>
-                <input type="email" placeholder="Your Email" required>
-                <textarea placeholder="Your Message" required></textarea>
-                <button type="submit" class="submit-btn">Send Message</button>
-            </form>
-            <div class="social-links">
-                <a href="#"><i class="fab fa-github"></i></a>
-                <a href="#"><i class="fab fa-linkedin"></i></a>
-                <a href="#"><i class="fab fa-twitter"></i></a>
+        <h2 class="section-title">Contact Me</h2>
+        <div class="contact-container">
+            <div class="contact-content">
+                <div class="social-links">
+                    <a href="https://github.com/Veer6693" target="_blank" class="social-link">
+                        <i class="fab fa-github"></i>
+                        <span>GitHub</span>
+                    </a>
+                    <a href="https://www.linkedin.com/in/veer-patel-602a76215/" target="_blank" class="social-link">
+                        <i class="fab fa-linkedin"></i>
+                        <span>LinkedIn</span>
+                    </a>
+                    <a href="https://x.com/ve_er008" target="_blank" class="social-link">
+                        <i class="fab fa-twitter"></i>
+                        <span>Twitter</span>
+                    </a>
+                </div>
+                <form class="contact-form" data-aos="fade-up">
+                    <div class="form-group">
+                        <input type="text" id="name" name="name" required>
+                        <label for="name">Your Name</label>
+                    </div>
+                    <div class="form-group">
+                        <input type="email" id="email" name="email" required>
+                        <label for="email">Your Email</label>
+                    </div>
+                    <div class="form-group">
+                        <textarea id="message" name="message" required></textarea>
+                        <label for="message">Your Message</label>
+                    </div>
+                    <button type="submit" class="submit-btn">
+                        <span>Send Message</span>
+                        <i class="fas fa-paper-plane"></i>
+                    </button>
+                </form>
             </div>
         </div>
     </section>
 
     <!-- Footer -->
-    <footer>
+    <!-- <footer>
         <p>&copy; 2025 Data Science Portfolio. All rights reserved.</p>
-    </footer>
+    </footer> -->
 
     <script src="js/main.js"></script>
 </body>

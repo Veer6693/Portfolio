@@ -35,12 +35,29 @@ document.querySelectorAll('a[href^="#"]').forEach(anchor => {
 window.addEventListener('scroll', function() {
     const navbar = document.querySelector('.navbar');
     if (window.scrollY > 50) {
-        navbar.style.backgroundColor = 'var(--nav-bg)';
-        navbar.style.boxShadow = '0 2px 15px var(--card-shadow)';
+        navbar.classList.add('scrolled');
     } else {
-        navbar.style.backgroundColor = 'transparent';
-        navbar.style.boxShadow = 'none';
+        navbar.classList.remove('scrolled');
     }
+});
+
+// Add active class to current section
+const sections = document.querySelectorAll('section[id]');
+window.addEventListener('scroll', () => {
+    const scrollY = window.pageYOffset;
+    
+    sections.forEach(section => {
+        const sectionHeight = section.offsetHeight;
+        const sectionTop = section.offsetTop - 100;
+        const sectionId = section.getAttribute('id');
+        const navLink = document.querySelector(`.nav-links a[href*=${sectionId}]`);
+        
+        if (scrollY > sectionTop && scrollY <= sectionTop + sectionHeight) {
+            navLink?.classList.add('active');
+        } else {
+            navLink?.classList.remove('active');
+        }
+    });
 });
 
 // Form submission handling
@@ -229,48 +246,76 @@ function initParallax() {
 }
 
 // Typing Animation
-document.addEventListener('DOMContentLoaded', function() {
-    const texts = ['AI Engineer', 'Data Scientist', 'MLOps Engineer'];
-    let count = 0;
-    let index = 0;
-    let currentText = '';
-    let letter = '';
-    let isDeleting = false;
-    const typingDelay = 200;
-    const erasingDelay = 100;
-    const newTextDelay = 2000;
-
-    function type() {
-        const typedTextSpan = document.querySelector(".typed-text");
-        if (!typedTextSpan) return;
-
-        currentText = texts[count];
+class TypingAnimation {
+    constructor() {
+        this.texts = [
+            'Machine Learning',
+            'Deep Learning',
+            'Computer Vision',
+            'Natural Language Processing',
+            'Data Science'
+        ];
+        this.typedTextSpan = document.querySelector('.typed-text');
+        this.cursorSpan = document.querySelector('.cursor');
         
-        if (isDeleting) {
-            letter = currentText.substring(0, --index);
-        } else {
-            letter = currentText.substring(0, ++index);
+        this.textIndex = 0;
+        this.charIndex = 0;
+        this.isDeleting = false;
+        this.typingDelay = 100;
+        this.erasingDelay = 50;
+        this.newTextDelay = 2000;
+        
+        if (this.typedTextSpan && this.cursorSpan) {
+            this.type();
         }
-
-        typedTextSpan.textContent = letter;
-
-        let typeSpeed = isDeleting ? erasingDelay : typingDelay;
-
-        if (!isDeleting && index === currentText.length) {
-            typeSpeed = newTextDelay;
-            isDeleting = true;
-        } else if (isDeleting && index === 0) {
-            isDeleting = false;
-            count++;
-            if (count === texts.length) {
-                count = 0;
-            }
-        }
-
-        setTimeout(type, typeSpeed);
     }
+    
+    type() {
+        const currentText = this.texts[this.textIndex];
+        const shouldType = !this.isDeleting;
+        
+        const text = shouldType 
+            ? currentText.substring(0, this.charIndex + 1)
+            : currentText.substring(0, this.charIndex - 1);
 
-    type();
+        if (this.typedTextSpan) {
+            this.typedTextSpan.textContent = text;
+        }
+
+        let typeSpeed = shouldType ? this.typingDelay : this.erasingDelay;
+
+        if (!this.isDeleting && this.charIndex === currentText.length) {
+            typeSpeed = this.newTextDelay;
+            this.isDeleting = true;
+        } else if (this.isDeleting && this.charIndex === 0) {
+            this.isDeleting = false;
+            this.textIndex = (this.textIndex + 1) % this.texts.length;
+            typeSpeed = 500;
+        }
+
+        this.charIndex = shouldType ? this.charIndex + 1 : this.charIndex - 1;
+
+        setTimeout(() => this.type(), typeSpeed);
+    }
+}
+
+// Add cursor blink animation
+const styles = `
+@keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0; }
+}
+`;
+
+const styleSheet = document.createElement("style");
+styleSheet.textContent = styles;
+document.head.appendChild(styleSheet);
+
+// Initialize typing animation when DOM is loaded
+document.addEventListener('DOMContentLoaded', () => {
+    new TypingAnimation();
+    init3D();
+    initParallax();
 });
 
 // Glitch effect on hover
@@ -292,35 +337,60 @@ if (glitchText) {
     });
 }
 
-// Initialize everything
-window.addEventListener('load', () => {
-    init3D();
-    initParallax();
-});
-
 // Particle System
 class ParticleSystem {
-    constructor(canvas, ctx) {
+    constructor(canvas) {
         this.canvas = canvas;
-        this.ctx = ctx;
+        this.ctx = canvas.getContext('2d');
         this.particles = [];
-        this.mouseX = 0;
-        this.mouseY = 0;
         this.maxParticles = 100;
         this.connectionDistance = 150;
+        this.mouseX = 0;
+        this.mouseY = 0;
+        this.isMouseInCanvas = false;
         
         this.init();
         this.animate();
         
         // Track mouse position
-        window.addEventListener('mousemove', (e) => {
-            this.mouseX = e.clientX;
-            this.mouseY = e.clientY;
+        this.canvas.addEventListener('mousemove', (e) => {
+            const rect = this.canvas.getBoundingClientRect();
+            this.mouseX = e.clientX - rect.left;
+            this.mouseY = e.clientY - rect.top;
         });
+
+        // Track mouse enter/leave
+        this.canvas.addEventListener('mouseenter', () => {
+            this.isMouseInCanvas = true;
+        });
+
+        this.canvas.addEventListener('mouseleave', () => {
+            this.isMouseInCanvas = false;
+        });
+        
+        window.addEventListener('resize', () => this.updateCanvasSize());
     }
     
     init() {
-        // Create initial particles
+        this.updateCanvasSize();
+        for (let i = 0; i < this.maxParticles; i++) {
+            this.particles.push(this.createParticle());
+        }
+    }
+    
+    updateCanvasSize() {
+        const dpr = window.devicePixelRatio || 1;
+        const rect = this.canvas.getBoundingClientRect();
+        
+        this.canvas.width = rect.width * dpr;
+        this.canvas.height = rect.height * dpr;
+        this.ctx.scale(dpr, dpr);
+        
+        this.canvas.style.width = `${rect.width}px`;
+        this.canvas.style.height = `${rect.height}px`;
+        
+        // Recreate particles
+        this.particles = [];
         for (let i = 0; i < this.maxParticles; i++) {
             this.particles.push(this.createParticle());
         }
@@ -330,24 +400,10 @@ class ParticleSystem {
         return {
             x: Math.random() * this.canvas.width,
             y: Math.random() * this.canvas.height,
-            size: Math.random() * 3 + 1,
-            speedX: Math.random() * 2 - 1,
-            speedY: Math.random() * 2 - 1
+            size: Math.random() * 2 + 1,
+            speedX: (Math.random() - 0.5) * 2,
+            speedY: (Math.random() - 0.5) * 2
         };
-    }
-    
-    updateCanvasSize() {
-        const particles = this.particles;
-        const canvas = this.canvas;
-        
-        // Update particle positions based on new canvas size
-        particles.forEach(particle => {
-            particle.x = (particle.x / canvas.width) * window.innerWidth;
-            particle.y = (particle.y / canvas.height) * window.innerHeight;
-        });
-        
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
     }
     
     animate() {
@@ -360,35 +416,30 @@ class ParticleSystem {
             particle.y += particle.speedY;
             
             // Bounce off edges
-            if (particle.x > this.canvas.width) {
-                particle.x = 0;
-            } else if (particle.x < 0) {
-                particle.x = this.canvas.width;
-            }
-            
-            if (particle.y > this.canvas.height) {
-                particle.y = 0;
-            } else if (particle.y < 0) {
-                particle.y = this.canvas.height;
-            }
+            if (particle.x < 0 || particle.x > this.canvas.width) particle.speedX *= -1;
+            if (particle.y < 0 || particle.y > this.canvas.height) particle.speedY *= -1;
             
             // Draw particle
             this.ctx.beginPath();
             this.ctx.arc(particle.x, particle.y, particle.size, 0, Math.PI * 2);
-            this.ctx.fillStyle = getComputedStyle(document.documentElement).getPropertyValue('--particle-color').trim();
+            this.ctx.fillStyle = 'rgba(100, 181, 246, 0.8)';
             this.ctx.fill();
             
-            // Connect particles
+            // Connect to nearby particles
             this.connectParticles(particle, this.particles.slice(index + 1));
             
-            // Connect with mouse
-            const mouseDistance = Math.hypot(particle.x - this.mouseX, particle.y - this.mouseY);
-            if (mouseDistance < this.connectionDistance) {
-                this.ctx.beginPath();
-                this.ctx.moveTo(particle.x, particle.y);
-                this.ctx.lineTo(this.mouseX, this.mouseY);
-                this.ctx.strokeStyle = `rgba(100, 181, 246, ${1 - mouseDistance / this.connectionDistance})`;
-                this.ctx.stroke();
+            // Connect to mouse if it's in canvas
+            if (this.isMouseInCanvas) {
+                const mouseDistance = Math.hypot(particle.x - this.mouseX, particle.y - this.mouseY);
+                if (mouseDistance < this.connectionDistance) {
+                    this.ctx.beginPath();
+                    this.ctx.moveTo(particle.x, particle.y);
+                    this.ctx.lineTo(this.mouseX, this.mouseY);
+                    const opacity = 1 - (mouseDistance / this.connectionDistance);
+                    this.ctx.strokeStyle = `rgba(100, 181, 246, ${opacity})`;
+                    this.ctx.lineWidth = 1;
+                    this.ctx.stroke();
+                }
             }
         });
         
@@ -400,82 +451,22 @@ class ParticleSystem {
             const distance = Math.hypot(particle.x - otherParticle.x, particle.y - otherParticle.y);
             
             if (distance < this.connectionDistance) {
-                const opacity = 1 - distance / this.connectionDistance;
                 this.ctx.beginPath();
                 this.ctx.moveTo(particle.x, particle.y);
                 this.ctx.lineTo(otherParticle.x, otherParticle.y);
+                const opacity = 1 - (distance / this.connectionDistance);
                 this.ctx.strokeStyle = `rgba(100, 181, 246, ${opacity})`;
+                this.ctx.lineWidth = 1;
                 this.ctx.stroke();
             }
         });
     }
 }
 
-// Typing Animation
-class TypingAnimation {
-    constructor() {
-        this.texts = ['AI Engineer', 'Data Scientist', 'MLOps Engineer'];
-        this.typedTextSpan = document.querySelector('.typed-text');
-        this.cursorSpan = document.querySelector('.cursor');
-        
-        this.textIndex = 0;
-        this.charIndex = 0;
-        this.isDeleting = false;
-        this.typingDelay = 200;
-        this.erasingDelay = 100;
-        this.newTextDelay = 2000;
-        
-        this.type();
-    }
-    
-    type() {
-        if (!this.typedTextSpan) return;
-        
-        const currentText = this.texts[this.textIndex];
-        const currentChar = this.isDeleting 
-            ? currentText.substring(0, this.charIndex - 1)
-            : currentText.substring(0, this.charIndex + 1);
-
-        this.typedTextSpan.textContent = currentChar;
-
-        let typeSpeed = this.isDeleting ? this.erasingDelay : this.typingDelay;
-
-        if (!this.isDeleting && this.charIndex === currentText.length) {
-            typeSpeed = this.newTextDelay;
-            this.isDeleting = true;
-        } else if (this.isDeleting && this.charIndex === 0) {
-            this.isDeleting = false;
-            this.textIndex++;
-            if (this.textIndex === this.texts.length) {
-                this.textIndex = 0;
-            }
-        }
-
-        this.charIndex = this.isDeleting ? this.charIndex - 1 : this.charIndex + 1;
-        setTimeout(() => this.type(), typeSpeed);
-    }
-}
-
 // Initialize everything when DOM is loaded
 document.addEventListener('DOMContentLoaded', () => {
-    // Initialize particle system
     const canvas = document.getElementById('particleCanvas');
-    const ctx = canvas.getContext('2d');
-    const particleSystem = new ParticleSystem(canvas, ctx);
-    
-    // Initialize typing animation
-    const typingAnimation = new TypingAnimation();
-    
-    // Set canvas size
-    function resizeCanvas() {
-        canvas.width = window.innerWidth;
-        canvas.height = window.innerHeight;
-        particleSystem.updateCanvasSize();
+    if (canvas) {
+        new ParticleSystem(canvas);
     }
-    
-    // Initial resize
-    resizeCanvas();
-    
-    // Handle window resize
-    window.addEventListener('resize', resizeCanvas);
 });
